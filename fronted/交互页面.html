@@ -141,12 +141,12 @@
             快捷提问
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="feature-item bg-blue-50 p-4 rounded-lg" onclick="sendQuickQuestion('感冒了应该吃什么药？')">
-                <i class="fas fa-question-circle text-primary text-2xl mb-2"></i>
-                <h3 class="font-semibold mb-1">疾病咨询</h3>
-                <p class="text-sm text-gray-600">常见疾病症状、预防和护理</p>
+            <div class="feature-item bg-blue-50 p-4 rounded-lg" onclick="openSymptomChecker()">
+                <i class="fas fa-stethoscope text-primary text-2xl mb-2"></i>
+                <h3 class="font-semibold mb-1">症状诊断</h3>
+                <p class="text-sm text-gray-600">描述症状，获得专业建议</p>
             </div>
-            <div class="feature-item bg-green-50 p-4 rounded-lg" onclick="sendQuickQuestion('这种药该怎么吃？')">
+            <div class="feature-item bg-green-50 p-4 rounded-lg" onclick="openMedicationGuide()">
                 <i class="fas fa-pills text-green-500 text-2xl mb-2"></i>
                 <h3 class="font-semibold mb-1">用药指导</h3>
                 <p class="text-sm text-gray-600">药物使用方法及注意事项</p>
@@ -202,6 +202,127 @@
     </div>
 </main>
 
+<!-- 症状诊断模态框 -->
+<div id="symptom-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">🩺 症状诊断助手</h3>
+                <button onclick="closeSymptomModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">请描述您的主要症状：</label>
+                    <textarea id="main-symptom" placeholder="例如：头痛、发热、咳嗽、腹痛等..." 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">症状持续时间：</label>
+                    <select id="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50">
+                        <option value="">请选择</option>
+                        <option value="几小时">几小时</option>
+                        <option value="1-2天">1-2天</option>
+                        <option value="3-7天">3-7天</option>
+                        <option value="1-2周">1-2周</option>
+                        <option value="超过2周">超过2周</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">症状严重程度：</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="severity" value="轻微" class="mr-2">
+                            <span class="text-sm">轻微</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="severity" value="中等" class="mr-2">
+                            <span class="text-sm">中等</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="severity" value="严重" class="mr-2">
+                            <span class="text-sm">严重</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">其他相关症状（可选）：</label>
+                    <textarea id="other-symptoms" placeholder="请描述其他相关症状，如恶心、呕吐、乏力等..." 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50"></textarea>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="submitSymptomCheck()" 
+                        class="flex-1 bg-primary text-white px-4 py-3 rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-search mr-2"></i>获取诊断建议
+                    </button>
+                    <button onclick="closeSymptomModal()" 
+                        class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用药指导模态框 -->
+<div id="medication-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">💊 用药指导助手</h3>
+                <button onclick="closeMedicationModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">药物名称：</label>
+                    <input type="text" id="medication-name" placeholder="请输入药物名称，如：布洛芬、阿莫西林等..." 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">用药目的：</label>
+                    <select id="medication-purpose" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50">
+                        <option value="">请选择</option>
+                        <option value="退烧">退烧</option>
+                        <option value="止痛">止痛</option>
+                        <option value="消炎">消炎</option>
+                        <option value="止咳">止咳</option>
+                        <option value="抗过敏">抗过敏</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">您的具体问题：</label>
+                    <textarea id="medication-question" placeholder="例如：这个药应该怎么吃？有什么副作用？注意事项是什么？" 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50"></textarea>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="submitMedicationGuide()" 
+                        class="flex-1 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-pills mr-2"></i>获取用药指导
+                    </button>
+                    <button onclick="closeMedicationModal()" 
+                        class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 页脚 -->
 <footer class="bg-gray-800 text-white py-4 mt-8">
     <div class="container mx-auto px-4 text-center text-sm opacity-70">
@@ -248,29 +369,8 @@
         chatContainer.appendChild(typingMessage);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        // 模拟API调用（实际使用时替换为真实接口）
-        setTimeout(() => {
-            // 移除打字动画
-            typingMessage.remove();
-
-            // 生成模拟回答（实际项目中替换为API返回的真实回答）
-            const answersMap = {
-                "感冒了应该吃什么药？": "根据您的描述，可能是普通感冒引起的症状。建议多休息、多喝水，保持室内空气流通。如果体温超过38.5℃，可以适当服用退烧药。若症状持续超过3天未缓解或加重，请及时就医。",
-                "这种药该怎么吃？": "这种药物一般建议饭后半小时服用，每次1片，每日3次。服药期间避免饮酒，可能会有轻微头晕的副作用，若出现严重不适请立即停药并咨询医生。",
-                "如何保持健康的生活方式？": "从医学角度看，每天保持30分钟中等强度的运动对健康有益。饮食上建议多摄入新鲜蔬果，减少高油高盐食物。保持充足睡眠也很重要，成年人一般需要7-8小时的睡眠。"
-            };
-            const answer = answersMap[question] || "抱歉，我暂时无法回答这个问题。";
-
-            // 显示助手回答
-            const assistantMessage = document.createElement('div');
-            assistantMessage.className = 'chat-message chat-assistant message-appear';
-            assistantMessage.innerHTML = `
-                <p>${answer}</p>
-                <div class="message-time">${getCurrentTime()}</div>
-            `;
-            chatContainer.appendChild(assistantMessage);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 1500);
+        // 调用真实API
+        callMedicalAPI(question, typingMessage);
     }
 
     // 发送问题函数
@@ -305,35 +405,154 @@
         chatContainer.appendChild(typingMessage);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        // 模拟API调用（实际使用时替换为真实接口）
-        setTimeout(() => {
+        // 调用真实API
+        callMedicalAPI(question, typingMessage);
+    }
+
+    // API调用函数
+    async function callMedicalAPI(question, typingMessage) {
+        try {
+            const response = await fetch("http://127.0.0.1:8002/ask", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
             // 移除打字动画
             typingMessage.remove();
 
-            // 生成模拟回答（实际项目中替换为API返回的真实回答）
-            const mockAnswers = [
-                "根据您的描述，可能是普通感冒引起的症状。建议多休息、多喝水，保持室内空气流通。如果体温超过38.5℃，可以适当服用退烧药。若症状持续超过3天未缓解或加重，请及时就医。",
-                "这种药物一般建议饭后半小时服用，每次1片，每日3次。服药期间避免饮酒，可能会有轻微头晕的副作用，若出现严重不适请立即停药并咨询医生。",
-                "从医学角度看，每天保持30分钟中等强度的运动对健康有益。饮食上建议多摄入新鲜蔬果，减少高油高盐食物。保持充足睡眠也很重要，成年人一般需要7-8小时的睡眠。"
-            ];
-            const randomAnswer = mockAnswers[Math.floor(Math.random() * mockAnswers.length)];
-
-            // 显示助手回答
-            const assistantMessage = document.createElement('div');
-            assistantMessage.className = 'chat-message chat-assistant message-appear';
-            assistantMessage.innerHTML = `
-                <p>${randomAnswer}</p>
+            if (data.success) {
+                // 显示助手回答
+                const assistantMessage = document.createElement('div');
+                assistantMessage.className = 'chat-message chat-assistant message-appear';
+                assistantMessage.innerHTML = `
+                    <p>${data.answer}</p>
+                    <div class="message-time">${getCurrentTime()}</div>
+                `;
+                chatContainer.appendChild(assistantMessage);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else {
+                // 显示错误信息
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'chat-message chat-assistant message-appear';
+                errorMessage.innerHTML = `
+                    <p style="color: #e74c3c;">❌ 抱歉，处理您的问题时出现了错误：${data.error || '未知错误'}</p>
+                    <div class="message-time">${getCurrentTime()}</div>
+                `;
+                chatContainer.appendChild(errorMessage);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        } catch (error) {
+            console.error("API调用失败:", error);
+            
+            // 移除打字动画
+            typingMessage.remove();
+            
+            // 显示连接错误
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'chat-message chat-assistant message-appear';
+            errorMessage.innerHTML = `
+                <p style="color: #e74c3c;">❌ 连接失败，请检查后端服务是否启动</p>
+                <p style="color: #e74c3c; font-size: 0.9em;">错误信息：${error.message}</p>
                 <div class="message-time">${getCurrentTime()}</div>
             `;
-            chatContainer.appendChild(assistantMessage);
+            chatContainer.appendChild(errorMessage);
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 1500);
+        }
     }
 
     // 获取当前时间格式化
     function getCurrentTime() {
         const now = new Date();
         return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+
+    // 症状诊断相关函数
+    function openSymptomChecker() {
+        document.getElementById('symptom-modal').classList.remove('hidden');
+    }
+    
+    function closeSymptomModal() {
+        document.getElementById('symptom-modal').classList.add('hidden');
+        // 清空表单
+        document.getElementById('main-symptom').value = '';
+        document.getElementById('duration').value = '';
+        document.querySelectorAll('input[name="severity"]').forEach(radio => radio.checked = false);
+        document.getElementById('other-symptoms').value = '';
+    }
+    
+    function submitSymptomCheck() {
+        const mainSymptom = document.getElementById('main-symptom').value.trim();
+        const duration = document.getElementById('duration').value;
+        const severity = document.querySelector('input[name="severity"]:checked')?.value;
+        const otherSymptoms = document.getElementById('other-symptoms').value.trim();
+        
+        if (!mainSymptom) {
+            alert('请描述您的主要症状');
+            return;
+        }
+        
+        // 构建详细的问题描述
+        let question = `我${mainSymptom}`;
+        if (duration) question += `，已经持续${duration}`;
+        if (severity) question += `，症状程度为${severity}`;
+        if (otherSymptoms) question += `，还伴有${otherSymptoms}`;
+        question += '，请问这是什么原因，应该怎么办？';
+        
+        // 关闭模态框
+        closeSymptomModal();
+        
+        // 发送问题
+        sendQuickQuestion(question);
+    }
+    
+    // 用药指导相关函数
+    function openMedicationGuide() {
+        document.getElementById('medication-modal').classList.remove('hidden');
+    }
+    
+    function closeMedicationModal() {
+        document.getElementById('medication-modal').classList.add('hidden');
+        // 清空表单
+        document.getElementById('medication-name').value = '';
+        document.getElementById('medication-purpose').value = '';
+        document.getElementById('medication-question').value = '';
+    }
+    
+    function submitMedicationGuide() {
+        const medicationName = document.getElementById('medication-name').value.trim();
+        const purpose = document.getElementById('medication-purpose').value;
+        const question = document.getElementById('medication-question').value.trim();
+        
+        if (!medicationName && !question) {
+            alert('请输入药物名称或具体问题');
+            return;
+        }
+        
+        // 构建问题
+        let fullQuestion = '';
+        if (medicationName) {
+            fullQuestion = `关于${medicationName}这个药`;
+            if (purpose) fullQuestion += `（用于${purpose}）`;
+            if (question) fullQuestion += `，${question}`;
+            else fullQuestion += '，请问应该怎么使用？有什么注意事项？';
+        } else {
+            fullQuestion = question;
+        }
+        
+        // 关闭模态框
+        closeMedicationModal();
+        
+        // 发送问题
+        sendQuickQuestion(fullQuestion);
     }
 
     // 事件监听
