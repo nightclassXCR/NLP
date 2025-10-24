@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医学智能问答助手</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @theme {
+            --color-primary: #165DFF;
+            --color-secondary: #36BFFA;
+            --color-bg: #F5F7FA;
+            --color-chat-user: #E6F7FF;
+            --color-chat-assistant: #FFFFFF;
+            --font-inter: 'Inter', sans-serif;
+        }
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .smooth-scroll {
+                scroll-behavior: smooth;
+            }
+            .message-appear {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
+            .typing-indicator span {
+                animation: typing 1.4s infinite ease-in-out both;
+            }
+            .typing-indicator span:nth-child(1) {
+                animation-delay: 0s;
+            }
+            .typing-indicator span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .typing-indicator span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+        }
+        body {
+            font-family: var(--font-inter);
+            background-color: var(--color-bg);
+        }
+        .chat-message {
+            max-width: 70%;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .chat-user {
+            background-color: var(--color-chat-user);
+            color: #0047AB;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-assistant {
+            background-color: var(--color-chat-assistant);
+            color: #333333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-bottom-left-radius: 4px;
+        }
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(22, 93, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--color-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes typing {
+            0% { transform: translateY(0px); }
+            28% { transform: translateY(-5px); }
+            44% { transform: translateY(0px); }
+        }
+        .chat-header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        }
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+        .feature-item {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- 顶部导航栏 -->
+<header class="chat-header text-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-white rounded-full p-2">
+                <i class="fas fa-stethoscope text-primary text-xl"></i>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold">医学智能问答助手</h1>
+        </div>
+        <div class="hidden md:flex items-center space-x-4">
+            <button class="hover:opacity-80 transition-opacity">
+                <i class="fas fa-history"></i>
+            </button>
+            <button class="hover:opacity-80 transition-opacity">
+                <i class="fas fa-cog"></i>
+            </button>
+            <button class="hover:opacity-80 transition-opacity">
+                <i class="fas fa-user-circle text-xl"></i>
+            </button>
+        </div>
+        <button class="md:hidden hover:opacity-80 transition-opacity">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+</header>
+
+<!-- 主要内容区 -->
+<main class="flex-grow container mx-auto px-4 py-6 md:py-8">
+    <!-- 功能介绍区 - 常驻显示 -->
+    <div id="features-section" class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-6 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-lightbulb text-primary mr-2"></i>
+            快捷提问
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="feature-item bg-blue-50 p-4 rounded-lg" onclick="sendQuickQuestion('感冒了应该吃什么药？')">
+                <i class="fas fa-question-circle text-primary text-2xl mb-2"></i>
+                <h3 class="font-semibold mb-1">疾病咨询</h3>
+                <p class="text-sm text-gray-600">常见疾病症状、预防和护理</p>
+            </div>
+            <div class="feature-item bg-green-50 p-4 rounded-lg" onclick="sendQuickQuestion('这种药该怎么吃？')">
+                <i class="fas fa-pills text-green-500 text-2xl mb-2"></i>
+                <h3 class="font-semibold mb-1">用药指导</h3>
+                <p class="text-sm text-gray-600">药物使用方法及注意事项</p>
+            </div>
+            <div class="feature-item bg-purple-50 p-4 rounded-lg" onclick="sendQuickQuestion('如何保持健康的生活方式？')">
+                <i class="fas fa-heartbeat text-purple-500 text-2xl mb-2"></i>
+                <h3 class="font-semibold mb-1">健康管理</h3>
+                <p class="text-sm text-gray-600">健康生活方式及养生建议</p>
+            </div>
+        </div>
+        <div class="mt-4 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg flex items-start">
+            <i class="fas fa-exclamation-circle mt-0.5 mr-2"></i>
+            <p>温馨提示：本助手提供的信息仅供参考，不能替代专业医师的诊断和治疗建议。如有紧急情况，请立即就医。</p>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- 聊天区域 -->
+        <div class="h-[500px] p-4 overflow-y-auto smooth-scroll content-auto" id="chat-container">
+            <!-- 欢迎消息 -->
+            <div class="chat-assistant message-appear">
+                <p>您好！我是医学智能问答助手，请问有什么可以帮助您的医学问题吗？</p>
+                <div class="message-time">刚刚</div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="p-4 border-t">
+            <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                <div class="flex-grow relative">
+                    <input
+                            type="text"
+                            id="question-input"
+                            placeholder="请输入您的医学问题，例如：感冒了应该吃什么药？..."
+                            class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    >
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-microphone cursor-pointer hover:text-primary transition-colors"></i>
+                    </div>
+                </div>
+                <button
+                        id="send-btn"
+                        class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 active:bg-primary/80 transition-all flex items-center justify-center"
+                >
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    <span>发送</span>
+                </button>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 text-center">
+                支持症状描述、疾病咨询、用药指导等医学相关问题
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-gray-800 text-white py-4 mt-8">
+    <div class="container mx-auto px-4 text-center text-sm opacity-70">
+        <p>医学智能问答助手 © 2025 | 仅供学习参考，不能替代专业医疗建议</p>
+        <div class="mt-2 flex justify-center space-x-4">
+            <a href="#" class="hover:opacity-100 transition-opacity">使用说明</a>
+            <a href="#" class="hover:opacity-100 transition-opacity">隐私政策</a>
+            <a href="#" class="hover:opacity-100 transition-opacity">联系我们</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // DOM 元素获取
+    const chatContainer = document.getElementById('chat-container');
+    const questionInput = document.getElementById('question-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // 快捷提问函数
+    function sendQuickQuestion(question) {
+        // 显示用户问题
+        const userMessage = document.createElement('div');
+        userMessage.className = 'chat-message chat-user message-appear';
+        userMessage.innerHTML = `
+            <p>${question}</p>
+            <div class="message-time">${getCurrentTime()}</div>
+        `;
+        chatContainer.appendChild(userMessage);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // 显示打字动画
+        const typingMessage = document.createElement('div');
+        typingMessage.className = 'chat-message chat-assistant';
+        typingMessage.innerHTML = `
+            <div class="flex items-center">
+                <div class="w-2 h-2 bg-gray-400 rounded-full mr-1 typing-indicator">
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                </div>
+                <p>正在分析您的问题...</p>
+            </div>
+        `;
+        chatContainer.appendChild(typingMessage);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // 模拟API调用（实际使用时替换为真实接口）
+        setTimeout(() => {
+            // 移除打字动画
+            typingMessage.remove();
+
+            // 生成模拟回答（实际项目中替换为API返回的真实回答）
+            const answersMap = {
+                "感冒了应该吃什么药？": "根据您的描述，可能是普通感冒引起的症状。建议多休息、多喝水，保持室内空气流通。如果体温超过38.5℃，可以适当服用退烧药。若症状持续超过3天未缓解或加重，请及时就医。",
+                "这种药该怎么吃？": "这种药物一般建议饭后半小时服用，每次1片，每日3次。服药期间避免饮酒，可能会有轻微头晕的副作用，若出现严重不适请立即停药并咨询医生。",
+                "如何保持健康的生活方式？": "从医学角度看，每天保持30分钟中等强度的运动对健康有益。饮食上建议多摄入新鲜蔬果，减少高油高盐食物。保持充足睡眠也很重要，成年人一般需要7-8小时的睡眠。"
+            };
+            const answer = answersMap[question] || "抱歉，我暂时无法回答这个问题。";
+
+            // 显示助手回答
+            const assistantMessage = document.createElement('div');
+            assistantMessage.className = 'chat-message chat-assistant message-appear';
+            assistantMessage.innerHTML = `
+                <p>${answer}</p>
+                <div class="message-time">${getCurrentTime()}</div>
+            `;
+            chatContainer.appendChild(assistantMessage);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 1500);
+    }
+
+    // 发送问题函数
+    function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        // 显示用户问题
+        const userMessage = document.createElement('div');
+        userMessage.className = 'chat-message chat-user message-appear';
+        userMessage.innerHTML = `
+            <p>${question}</p>
+            <div class="message-time">${getCurrentTime()}</div>
+        `;
+        chatContainer.appendChild(userMessage);
+        questionInput.value = '';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // 显示打字动画
+        const typingMessage = document.createElement('div');
+        typingMessage.className = 'chat-message chat-assistant';
+        typingMessage.innerHTML = `
+            <div class="flex items-center">
+                <div class="w-2 h-2 bg-gray-400 rounded-full mr-1 typing-indicator">
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                    <span class="inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                </div>
+                <p>正在分析您的问题...</p>
+            </div>
+        `;
+        chatContainer.appendChild(typingMessage);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // 模拟API调用（实际使用时替换为真实接口）
+        setTimeout(() => {
+            // 移除打字动画
+            typingMessage.remove();
+
+            // 生成模拟回答（实际项目中替换为API返回的真实回答）
+            const mockAnswers = [
+                "根据您的描述，可能是普通感冒引起的症状。建议多休息、多喝水，保持室内空气流通。如果体温超过38.5℃，可以适当服用退烧药。若症状持续超过3天未缓解或加重，请及时就医。",
+                "这种药物一般建议饭后半小时服用，每次1片，每日3次。服药期间避免饮酒，可能会有轻微头晕的副作用，若出现严重不适请立即停药并咨询医生。",
+                "从医学角度看，每天保持30分钟中等强度的运动对健康有益。饮食上建议多摄入新鲜蔬果，减少高油高盐食物。保持充足睡眠也很重要，成年人一般需要7-8小时的睡眠。"
+            ];
+            const randomAnswer = mockAnswers[Math.floor(Math.random() * mockAnswers.length)];
+
+            // 显示助手回答
+            const assistantMessage = document.createElement('div');
+            assistantMessage.className = 'chat-message chat-assistant message-appear';
+            assistantMessage.innerHTML = `
+                <p>${randomAnswer}</p>
+                <div class="message-time">${getCurrentTime()}</div>
+            `;
+            chatContainer.appendChild(assistantMessage);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 1500);
+    }
+
+    // 获取当前时间格式化
+    function getCurrentTime() {
+        const now = new Date();
+        return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+
+    // 事件监听
+    sendBtn.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendQuestion();
+    });
+</script>
+</body>
+</html>
